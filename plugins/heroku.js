@@ -135,6 +135,7 @@ async function sendButton(buttons,text,footer,message){
         if (!match) return await m.sendReply("_Need params!_\n_Eg: .setvar MODE:public_")
         let key = match.split(":")[0]
         let value =match.replace(key+":","").replace(/\n/g, '\\n')
+        config[key] = value
         if (isVPS){
         try { 
         var envFile = fs.readFileSync(`./config.env`).toString('utf-8')
@@ -156,7 +157,7 @@ async function sendButton(buttons,text,footer,message){
         }
         } else {
             let set_res = await update(key,value)
-            if (set_res) return await m.sendReply(`_Successfully set ${key} to ${config[key]}, rebooting._`)
+            if (set_res) return await m.sendReply(`_Successfully set ${key} to ${value}, redeploying._`)
             else throw "Error!"
         }   
     }));
@@ -194,18 +195,9 @@ async function sendButton(buttons,text,footer,message){
         desc: Lang.GETVAR_DESC,
         use: 'owner'
     }, (async (message, match) => {
-    
         if (match[1] === '') return await message.sendReply(Lang.NOT_FOUND)
-        if (isVPS) return await message.sendReply(config[match[1].trim()]?.toString() || "Not found")
-        await heroku.get(baseURI + '/config-vars').then(async (vars) => {
-            for (vr in vars) {
-                if (match[1].trim() == vr) return await message.sendReply(vars[vr])
-            }
-            await await message.sendReply(Lang.NOT_FOUND)
-        }).catch(async (error) => {
-            await await message.send(error.message)
-        });
-    }));
+        return await message.sendReply(config[match[1].trim()]?.toString() || "Not found")
+   }));
     /*Module({
             pattern: "allvar",
             fromMe: true,
@@ -238,24 +230,52 @@ async function sendButton(buttons,text,footer,message){
     }, (async (message, match) => {
         if (match[1]!=="button_on" && match[1]!=="button_off"){
             var buttons = [
-            {buttonId: handler+'chatbot button_on', buttonText: {displayText: 'ON'}, type: 1},
-            {buttonId: handler+'chatbot button_off', buttonText: {displayText: 'OFF'}, type: 1}
-        ]
-        if (isVPS){
-            buttons = [
                 {buttonId: handler+'setvar CHATBOT:on', buttonText: {displayText: 'ON'}, type: 1},
                 {buttonId: handler+'setvar CHATBOT:off', buttonText: {displayText: 'OFF'}, type: 1}
             ]
         }
         return await sendButton(buttons,"*ChatBot control panel*","Chatbot is currently turned "+Config.CHATBOT+" now",message)
-        }
-        await message.sendReply(match[1].endsWith("n")? "*Chatbot activated ✅*" : "*Chatbot de-activated ✅*");
-        await heroku.patch(baseURI + '/config-vars', {
-            body: {CHATBOT: match[1].split("_")[1]}
-        }).catch(async (err) => {
-            await message.sendReply('```'+err.message+'```')
-        });
     }));
+    Module({
+        pattern: 'settings ?(.*)',
+        fromMe: true,
+        desc: "Bot settings. Enable extra options related to WhatsApp visibility.",
+        use: 'owner'
+    }, (async (message, match) => {
+        if (match[1].includes(";")){
+            let key_ = match[1].split(";")
+            var buttons = [
+                {buttonId: handler+`setvar ${key_[0]}:true`, buttonText: {displayText: 'ON'}, type: 1},
+                {buttonId: handler+`setvar ${key_[0]}:false`, buttonText: {displayText: 'OFF'}, type: 1}
+            ]
+            return await sendButton(buttons,`_${key_[1]}_`,`_Current status: ${config[key_[0]]?'enabled':'disabled'}_`,message)
+    
+        }
+            const sections = [
+                {
+                title: "Configure these:",
+                rows: [
+                    {title: "Auto read all messages", rowId: handler+"settings READ_MESSAGES;Auto read all messages"},
+                    {title: "Auto read command messages", rowId: handler+"settings READ_COMMAND;Auto read command messages"},
+                    {title: "Auto read status updates", rowId: handler+"settings AUTO_READ_STATUS;Auto read status updates"},
+                    {title: "Auto reject calls", rowId: handler+"settings REJECT_CALLS;Auto reject calls"},
+                    {title: "Always online", rowId: handler+"settings ALWAYS_ONLINE;Always Online"},
+                    {title: "PM Auto blocker", rowId: handler+"settings PMB_VAR;PM auto blocker"},
+                    {title: "Disable bot in PM", rowId: handler+"settings DIS_PM;Disable public bot use in PM"}
+                ]
+                }
+            ]
+            
+            const listMessage = {
+              text: " ",
+              footer: "_Configure your settings_",
+              title: "_Settings_",
+              buttonText: "view",
+              sections
+            }
+            
+         return await message.client.sendMessage(message.jid, listMessage)
+        }));
     Module({
         pattern: 'mode ?(.*)',
         fromMe: true,
