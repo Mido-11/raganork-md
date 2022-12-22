@@ -85,16 +85,19 @@ Module({
  }); 
 } else {
   var myid = message.client.user.id.split("@")[0].split(":")[0]
-  let sr = await searchYT(match[1]);
-  sr = sr.videos;
+  var sr = await searchYT(match[1]);
+  sr = sr.videos.splice(0,21);
   if (sr.length < 1) return await message.sendReply(Lang.NO_RESULT);
   var SongData = []
   for (var i in sr){
+    const title = sr[i].title?.text
+    if (title){
     SongData.push({
-      title: sr[i].title.text,
+      title,
       description: sr[i].artist,
       rowId: handler+"song https://youtu.be/" + sr[i].id
   })
+  }
   }
   const sections = [{
       title: Lang.MATCHING_SONGS,
@@ -102,7 +105,6 @@ Module({
   }];
   const listMessage = {
       text: "and "+(sr.length-1)+" more results..",
-      footer: "user: " + message.data.pushName,
       title: sr[0].title.text,
       buttonText: "Select song",
       sections
@@ -140,20 +142,21 @@ return await message.client.sendMessage(message.jid, buttonMessage)
   sr = sr.videos;
   if (sr.length < 1) return await message.sendReply("*No results found!*");
   var videos = [];
-  for (var index = 0; index < sr.length; index++) {
-      videos.push({
-          title: sr[index].title.text,
-          description: sr[index].duration.text,
+  for (var index in sr) {
+    const title = sr[index].title?.text  
+    if (title){
+    videos.push({
+          title,
+          description: sr[index].duration?.text,
           rowId: handler+"yts https://youtu.be/" + sr[index].id
       });
-  }
+      }  }
   const sections = [{
       title: "YouTube search resulrs",
       rows: videos
   }]
   const listMessage = {
       text: "and " + (sr.length - 1) + " more results...",
-      footer: "user: " + message.data.pushName,
       title: sr[0].title.text,
       buttonText: "Select a video",
       sections
