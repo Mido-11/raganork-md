@@ -12,10 +12,10 @@ var badwordsRegExp = require('badwords/regexp');
 const {
     getString
 } = require('./misc/lang');
+const {ChatGPT, Davinci} = require('./misc/AI');
 const {
     getJson,
-    gtts,
-    chatGPT
+    gtts
 } = require('./misc/misc');
 const gis = require('async-g-i-s');
 const axios = require('axios');
@@ -76,7 +76,7 @@ Module({
     }
     query = query.replace("tts","")
     var lng = 'en';
-    if (/[^\x00-\x7F]+/.test(query)) lng = 'ml';
+    if (/[\u0D00-\u0D7F]+/.test(query)) lng = 'ml';
     let
         LANG = lng,
         ttsMessage = query,
@@ -126,13 +126,26 @@ Module({
 Module({
     pattern: 'gpt ?(.*)',
     fromMe: w,
-    desc: "OpenAI's ChatGPT like languauge model, used for text generation",
+    desc: "OpenAI's ChatGPT's official languauge model, used for text generation, researches, and natural conversations",
     use: 'AI',
-    usage: '.gpt Write a short note about India'
+    usage: '.gpt Write a short note about Lionel Messi'
 }, (async (message, match) => {
     if (!match[1]) return await message.sendReply("Need any query!");
-    const {result} = await chatGPT(match[1])
-    return await message.sendReply(result)
+    if (!process.env.OPENAI_KEY) return await message.sendReply("_No OpenAI API key found. Get an API key:_\n\n_1. Create an account: https://platform.openai.com/signup/_\n\n_2. Then, open this url: https://platform.openai.com/account/api-keys and copy api key_\n\n_3. Add the key into OPENAI_KEY var using .setvar_\n\n_(Eg: .setvar OPENAI_KEY:yourkeyhere )_" )
+    const {text} = await ChatGPT(match[1],process.env.OPENAI_KEY)
+    return await message.sendReply(text || "_No response returned, please try again_")
+}));
+Module({
+    pattern: 'davinci ?(.*)',
+    fromMe: w,
+    desc: "OpenAI's yet another languauge model, best model for text generation and better prompt analysis",
+    use: 'AI',
+    usage: '.gpt Write a short note about Lionel Messi'
+}, (async (message, match) => {
+    if (!match[1]) return await message.sendReply("Need any query!");
+    const result = await Davinci(match[1])
+    const text = result.result?result.result:result;
+    return await message.sendReply(text)
 }));
 Module({
     pattern: 'zipcode ?(.*)',
