@@ -31,7 +31,7 @@ Module({
     } catch {
         return await message.send(Lang.INVALID_URL);
     }
-    if (url.host === 'gist.github.com') {
+    if (url.host === 'gist.github.com' || url.host === 'gist.githubusercontent.com') {
         url = !url?.toString().endsWith('raw')?url.toString() + '/raw':url.toString()
     } else {
         url = url.toString()
@@ -67,7 +67,7 @@ Module({
     if (match[1] !== '') {
         var plugin = plugins.filter(_plugin => _plugin.dataValues.name === match[1])
         try {
-            await message.sendReply(plugin.dataValues.name + ": " + plugin.dataValues.url);
+            await message.sendReply(`_${plugin[0].dataValues.name}:_ ${plugin[0].dataValues.url}`);
         } catch {
             return await message.sendReply(Lang.PLUGIN_NOT_FOUND)
         }
@@ -104,7 +104,7 @@ Module({
     } else {
         await plugin[0].destroy();
         const Message = Lang.DELETED.format(match[1])
-        await message.sendReply(message.jid,Message);
+        await message.sendReply(Message);
         delete require.cache[require.resolve('./' + match[1] + '.js')]
         fs.unlinkSync('./plugins/' + match[1] + '.js');
        }
