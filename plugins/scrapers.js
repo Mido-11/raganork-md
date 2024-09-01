@@ -122,7 +122,7 @@ Module({
     desc: Lang.IMG_DESC,
     use: 'search'
 }, (async (message, match) => {
-    if (!match[1]) return await message.sendReply(Lang.NEED_WORD);
+    if (!match[1]) return await message.sendReply(Lang.NEED_WORDS);
     var count = parseInt(match[1].split(",")[1]) || 5
     var query = match[1].split(",")[0] || match[1];
     if (badwordsRegExp.test(query)) return await message.sendReply(`_The word "${query.match(badwordsRegExp)}" is blocked!_`)
@@ -297,6 +297,7 @@ Module({
     if (!s1.includes('youtu')) return await message.sendReply("*"+Lang.NEED_VIDEO+"*");
     const getID = /(?:http(?:s|):\/\/|)(?:(?:www\.|)youtube(?:\-nocookie|)\.com\/(?:watch\?.*(?:|\&)v=|embed|shorts\/|v\/)|youtu\.be\/)([-_0-9A-Za-z]{11})/
     var vid = getID.exec(s1)[1]
+    await message.sendReply('_Downloading_');
     const video = await ytv(vid)
     const caption = await ytTitle(vid)    
     return await message.client.sendMessage(message.jid, {
@@ -389,7 +390,7 @@ Module({
 }, async (message, match) => {
     if (!match[1]) return await message.sendReply("_Need a movie/series name_");
     var news = [];
-    var res = (await axios(`https://raganork.tk/api/subtitles?query=${match[1]}`)).data
+    var res = (await axios(`https://api.raganork.online/api/subtitles?query=${match[1]}`)).data
 	if (!res) return await message.sendReply('_No results!_');
     if (res?.length && !('dl_url' in res)){
     var list = `_*Subtitles matching "${match[1]}":*_\n\n`
